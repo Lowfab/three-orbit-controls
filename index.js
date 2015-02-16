@@ -328,6 +328,13 @@ module.exports = function(THREE) {
 
         this.addDomElement = function( domElement ) {
             this.domElements.push( domElement );
+            domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
+            domElement.addEventListener( 'mousedown', function(event){onMouseDown(event, element)}, false );
+            domElement.addEventListener( 'mousewheel', function(event){onMouseWheel(event, element)}, false );
+            domElement.addEventListener( 'DOMMouseScroll', function(event){onMouseWheel(event, element)}, false ); // firefox
+            domElement.addEventListener( 'touchstart', function(event){touchstart(event, element)}, false );
+            domElement.addEventListener( 'touchend', function(event){touchend(event, element)}, false );
+            domElement.addEventListener( 'touchmove', function(event){touchmove(event, element)}, false );
         }
 
         };
