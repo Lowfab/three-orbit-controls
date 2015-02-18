@@ -26,10 +26,12 @@ module.exports = function(THREE) {
     //      controls.target.z = 150;
     // Simple substitute "OrbitControls" and the control should work as-is.
 
-    function OrbitControls ( object, domElement ) {
+    function OrbitControls (object, domElement ) {
 
-        this.object = object;
-        this.domElement = ( domElement !== undefined ) ? domElement : document;
+        this.objects = [];
+        this.objects[0] = object;
+        this.domElements = [];
+        this.domElements[0] = ( domElement !== undefined ) ? domElement : [document];
 
         // API
 
@@ -122,11 +124,11 @@ module.exports = function(THREE) {
         // for reset
 
         this.target0 = this.target.clone();
-        this.position0 = this.object.position.clone();
+        this.position0 = this.objects[0].position.clone();
 
         // so camera.up is the orbit axis
 
-        var quat = new THREE.Quaternion().setFromUnitVectors( object.up, new THREE.Vector3( 0, 1, 0 ) );
+        var quat = new THREE.Quaternion().setFromUnitVectors(object.up, new THREE.Vector3( 0, 1, 0 ) );
         var quatInverse = quat.clone().inverse();
 
         // events
@@ -134,6 +136,8 @@ module.exports = function(THREE) {
         var changeEvent = { type: 'change' };
         var startEvent = { type: 'start'};
         var endEvent = { type: 'end'};
+
+        var mouseMoveListener, mouseUpListener;
 
         this.rotateLeft = function ( angle ) {
 
@@ -162,7 +166,7 @@ module.exports = function(THREE) {
         // pass in distance in world space to move left
         this.panLeft = function ( distance ) {
 
-            var te = this.object.matrix.elements;
+            var te = this.objects[0].matrix.elements;
 
             // get X column of matrix
             panOffset.set( te[ 0 ], te[ 1 ], te[ 2 ] );
@@ -175,7 +179,7 @@ module.exports = function(THREE) {
         // pass in distance in world space to move up
         this.panUp = function ( distance ) {
 
-            var te = this.object.matrix.elements;
+            var te = this.objects[0].matrix.elements;
 
             // get Y column of matrix
             panOffset.set( te[ 4 ], te[ 5 ], te[ 6 ] );
@@ -187,29 +191,29 @@ module.exports = function(THREE) {
 
         // pass in x,y of change desired in pixel space,
         // right and down are positive
-        this.pan = function ( deltaX, deltaY ) {
+        this.pan = function ( deltaX, deltaY, element ) {
 
-            var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+            element = element === document ? element.body : element;
 
-            if ( scope.object.fov !== undefined ) {
+            if ( scope.objects[0].fov !== undefined ) {
 
                 // perspective
-                var position = scope.object.position;
+                var position = scope.objects[0].position;
                 var offset = position.clone().sub( scope.target );
                 var targetDistance = offset.length();
 
                 // half of the fov is center to top of screen
-                targetDistance *= Math.tan( ( scope.object.fov / 2 ) * Math.PI / 180.0 );
+                targetDistance *= Math.tan( ( scope.objects[0].fov / 2 ) * Math.PI / 180.0 );
 
                 // we actually don't use screenWidth, since perspective camera is fixed to screen height
                 scope.panLeft( 2 * deltaX * targetDistance / element.clientHeight );
                 scope.panUp( 2 * deltaY * targetDistance / element.clientHeight );
 
-            } else if ( scope.object.top !== undefined ) {
+            } else if ( scope.objects[0].top !== undefined ) {
 
                 // orthographic
-                scope.panLeft( deltaX * (scope.object.right - scope.object.left) / element.clientWidth );
-                scope.panUp( deltaY * (scope.object.top - scope.object.bottom) / element.clientHeight );
+                scope.panLeft( deltaX * (scope.objects[0].right - scope.objects[0].left) / element.clientWidth );
+                scope.panUp( deltaY * (scope.objects[0].top - scope.objects[0].bottom) / element.clientHeight );
 
             } else {
 
@@ -246,7 +250,7 @@ module.exports = function(THREE) {
 
         this.update = function () {
 
-            var position = this.object.position;
+            var position = this.objects[0].position;
 
             offset.copy( position ).sub( this.target );
 
@@ -294,9 +298,12 @@ module.exports = function(THREE) {
             // rotate offset back to "camera-up-vector-is-up" space
             offset.applyQuaternion( quatInverse );
 
-            position.copy( this.target ).add( offset );
 
-            this.object.lookAt( this.target );
+            var length = this.objects.length;
+            for (var i = 0; i < length; i++) {
+                this.objects[i].position.copy( this.target ).add( offset );
+                this.objects[i].lookAt( this.target );
+            }
 
             thetaDelta = 0;
             phiDelta = 0;
@@ -307,15 +314,30 @@ module.exports = function(THREE) {
             // min(camera displacement, camera rotation in radians)^2 > EPS
             // using small-angle approximation cos(x/2) = 1 - x^2 / 8
 
-            if ( lastPosition.distanceToSquared( this.object.position ) > EPS
-                || 8 * (1 - lastQuaternion.dot(this.object.quaternion)) > EPS ) {
+            if ( lastPosition.distanceToSquared( this.objects[0].position ) > EPS
+                || 8 * (1 - lastQuaternion.dot(this.objects[0].quaternion)) > EPS ) {
 
                 this.dispatchEvent( changeEvent );
 
-                lastPosition.copy( this.object.position );
-                lastQuaternion.copy (this.object.quaternion );
+                lastPosition.copy( this.objects[0].position );
+                lastQuaternion.copy (this.objects[0].quaternion );
 
             }
+
+        this.addObject = function( object ) {
+            this.objects.push( object );
+        }
+
+        this.addDomElement = function( domElement ) {
+            this.domElements.push( domElement );
+            domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
+            domElement.addEventListener( 'mousedown', function(event){onMouseDown(event, element)}, false );
+            domElement.addEventListener( 'mousewheel', function(event){onMouseWheel(event, element)}, false );
+            domElement.addEventListener( 'DOMMouseScroll', function(event){onMouseWheel(event, element)}, false ); // firefox
+            domElement.addEventListener( 'touchstart', function(event){touchstart(event, element)}, false );
+            domElement.addEventListener( 'touchend', function(event){touchend(event, element)}, false );
+            domElement.addEventListener( 'touchmove', function(event){touchmove(event, element)}, false );
+        }
 
         };
 
@@ -325,7 +347,11 @@ module.exports = function(THREE) {
             state = STATE.NONE;
 
             this.target.copy( this.target0 );
-            this.object.position.copy( this.position0 );
+
+            var lenght = this.objects.length;
+            for ( var i = 0; i < lenght; i++ ) {
+                this.objects[i].position.copy( this.position0 );
+            }
 
             this.update();
 
@@ -355,7 +381,7 @@ module.exports = function(THREE) {
 
         }
 
-        function onMouseDown( event ) {
+        function onMouseDown( event, element ) {
 
             if ( scope.enabled === false ) return;
             event.preventDefault();
@@ -384,20 +410,23 @@ module.exports = function(THREE) {
             }
 
             if ( state !== STATE.NONE ) {
-                document.addEventListener( 'mousemove', onMouseMove, false );
-                document.addEventListener( 'mouseup', onMouseUp, false );
+                this.mouseMoveListener = function(event){onMouseMove(event, element)};
+                document.addEventListener( 'mousemove', this.mouseMoveListener, false );
+
+                this.mouseUpListener = function(event){onMouseUp(event, element)};
+                document.addEventListener( 'mouseup', this.mouseUpListener, false );
                 scope.dispatchEvent( startEvent );
             }
 
         }
 
-        function onMouseMove( event ) {
+        function onMouseMove( event, element ) {
 
             if ( scope.enabled === false ) return;
 
             event.preventDefault();
 
-            var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+            element = element === document ? element.body : element;
 
             if ( state === STATE.ROTATE ) {
 
@@ -440,7 +469,7 @@ module.exports = function(THREE) {
                 panEnd.set( event.clientX, event.clientY );
                 panDelta.subVectors( panEnd, panStart );
 
-                scope.pan( panDelta.x, panDelta.y );
+                scope.pan( panDelta.x, panDelta.y, element );
 
                 panStart.copy( panEnd );
 
@@ -454,8 +483,8 @@ module.exports = function(THREE) {
 
             if ( scope.enabled === false ) return;
 
-            document.removeEventListener( 'mousemove', onMouseMove, false );
-            document.removeEventListener( 'mouseup', onMouseUp, false );
+            document.removeEventListener( 'mousemove', this.mouseMoveListener, false );
+            document.removeEventListener( 'mouseup', this.mouseUpListener, false );
             scope.dispatchEvent( endEvent );
             state = STATE.NONE;
 
@@ -503,22 +532,22 @@ module.exports = function(THREE) {
             switch ( event.keyCode ) {
 
                 case scope.keys.UP:
-                    scope.pan( 0, scope.keyPanSpeed );
+                    scope.pan( 0, scope.keyPanSpeed, element );
                     scope.update();
                     break;
 
                 case scope.keys.BOTTOM:
-                    scope.pan( 0, - scope.keyPanSpeed );
+                    scope.pan( 0, - scope.keyPanSpeed, element );
                     scope.update();
                     break;
 
                 case scope.keys.LEFT:
-                    scope.pan( scope.keyPanSpeed, 0 );
+                    scope.pan( scope.keyPanSpeed, 0, element );
                     scope.update();
                     break;
 
                 case scope.keys.RIGHT:
-                    scope.pan( - scope.keyPanSpeed, 0 );
+                    scope.pan( - scope.keyPanSpeed, 0, element );
                     scope.update();
                     break;
 
@@ -572,14 +601,14 @@ module.exports = function(THREE) {
 
         }
 
-        function touchmove( event ) {
+        function touchmove( event, element ) {
 
             if ( scope.enabled === false ) return;
 
             event.preventDefault();
             event.stopPropagation();
 
-            var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+            element = element === document ? element.body : element;
 
             switch ( event.touches.length ) {
 
@@ -636,7 +665,7 @@ module.exports = function(THREE) {
                     panEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
                     panDelta.subVectors( panEnd, panStart );
 
-                    scope.pan( panDelta.x, panDelta.y );
+                    scope.pan( panDelta.x, panDelta.y, element );
 
                     panStart.copy( panEnd );
 
@@ -660,16 +689,20 @@ module.exports = function(THREE) {
 
         }
 
-        this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
-        this.domElement.addEventListener( 'mousedown', onMouseDown, false );
-        this.domElement.addEventListener( 'mousewheel', onMouseWheel, false );
-        this.domElement.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
+        var length = this.domElements.length;
+        for ( var i = 0; i < length; i++ ) {
+            var element = this.domElements[i];
+            element.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
+            element.addEventListener( 'mousedown', function(event){onMouseDown(event, element)}, false );
+            element.addEventListener( 'mousewheel', function(event){onMouseWheel(event, element)}, false );
+            element.addEventListener( 'DOMMouseScroll', function(event){onMouseWheel(event, element)}, false ); // firefox
+            element.addEventListener( 'touchstart', function(event){touchstart(event, element)}, false );
+            element.addEventListener( 'touchend', function(event){touchend(event, element)}, false );
+            element.addEventListener( 'touchmove', function(event){touchmove(event, element)}, false );
+        }
 
-        this.domElement.addEventListener( 'touchstart', touchstart, false );
-        this.domElement.addEventListener( 'touchend', touchend, false );
-        this.domElement.addEventListener( 'touchmove', touchmove, false );
-
-        window.addEventListener( 'keydown', onKeyDown, false );
+        var element = this.domElements[0];
+        window.addEventListener( 'keydown', function(event){onKeyDown(event, element)}, false );
 
         // force an update at start
         this.update();
