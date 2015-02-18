@@ -1,5 +1,10 @@
 # three-orbit-controls
 
+## About this fork
+
+This fork adds the ability to add multiple targets that are always in sync.
+I.e. you can have multiple ThreeJS scenes and interact with them simultaneously.
+
 [![stable](http://badges.github.io/stability-badges/dist/stable.svg)](http://github.com/badges/stability-badges)
 
 ThreeJS OrbitControls as an npm module. See [test](#testing) for an example.
@@ -34,8 +39,6 @@ function render(gl, width, height) {
 
 ## Usage
 
-[![NPM](https://nodei.co/npm/three-orbit-controls.png)](https://nodei.co/npm/three-orbit-controls/)
-
 #### `OrbitControls = require('three-orbit-controls')(THREE)`
 
 This module exports a function which accepts an instance of THREE, and returns an OrbitControls class. This allows you to use the module with CommonJS, globals, etc.
@@ -43,8 +46,12 @@ This module exports a function which accepts an instance of THREE, and returns a
 The returned function has the following constructor pattern:
 
 ```js
-controls = new OrbitControls(camera[, domElement])
+controls = new OrbitControls(camera, domElement)
 ```
+
+You can add domElements by calling `addDomElement(domElement)`.
+You can add objects (instances of ThreeJS cameras) by calling `addObject
+(camera)`.
 
 #### Versioning
 
