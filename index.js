@@ -137,6 +137,8 @@ module.exports = function(THREE) {
         var startEvent = { type: 'start'};
         var endEvent = { type: 'end'};
 
+        var mouseMoveListener, mouseUpListener;
+
         this.rotateLeft = function ( angle ) {
 
             if ( angle === undefined ) {
@@ -408,8 +410,11 @@ module.exports = function(THREE) {
             }
 
             if ( state !== STATE.NONE ) {
-                document.addEventListener( 'mousemove', function(event){onMouseMove(event, element)}, false );
-                document.addEventListener( 'mouseup', function(event){onMouseUp(event, element)}, false );
+                this.mouseMoveListener = function(event){onMouseMove(event, element)};
+                document.addEventListener( 'mousemove', this.mouseMoveListener, false );
+
+                this.mouseUpListener = function(event){onMouseUp(event, element)};
+                document.addEventListener( 'mouseup', this.mouseUpListener, false );
                 scope.dispatchEvent( startEvent );
             }
 
@@ -478,8 +483,8 @@ module.exports = function(THREE) {
 
             if ( scope.enabled === false ) return;
 
-            document.removeEventListener( 'mousemove', onMouseMove, false );
-            document.removeEventListener( 'mouseup', onMouseUp, false );
+            document.removeEventListener( 'mousemove', this.mouseMoveListener, false );
+            document.removeEventListener( 'mouseup', this.mouseUpListener, false );
             scope.dispatchEvent( endEvent );
             state = STATE.NONE;
 
