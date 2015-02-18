@@ -1,14 +1,27 @@
 {
   "name": "three-orbit-controls",
-  "version": "69.0.4",
+  "version": "69.1.0-beta",
   "description": "orbit controls for ThreeJS",
   "main": "index.js",
   "license": "MIT",
-  "author": {
-    "name": "Matt DesLauriers",
-    "email": "dave.des@gmail.com",
-    "url": "https://github.com/mattdesl"
-  },
+  "author": "Lowfab",
+  "contributors": [
+    {
+      "name": "Adrian Sieber"
+    },
+    {
+      "name": "Arthur Silber"
+    },
+    {
+      "name": "Johannes Deselaers"
+    },
+    {
+      "name": "Stefan Neubert"
+    },
+    {
+      "name": "Yannis Kommana"
+    }
+  ],
   "dependencies": {},
   "devDependencies": {
     "browserify": "^8.1.1",
@@ -32,10 +45,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/mattdesl/three-orbit-controls.git"
+    "url": "http://github.com/Lowfab/three-orbit-controls.git"
   },
-  "homepage": "https://github.com/mattdesl/three-orbit-controls",
+  "homepage": "https://github.com/Lowfab/three-orbit-controls",
   "bugs": {
-    "url": "https://github.com/mattdesl/three-orbit-controls/issues"
+    "url": "https://github.com/Lowfab/three-orbit-controls/issues"
   }
 }
