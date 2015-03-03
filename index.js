@@ -1,8 +1,10 @@
+require('PEP')
+
 module.exports = function(THREE) {
     var MOUSE = THREE.MOUSE
     if (!MOUSE)
         MOUSE = { LEFT: 0, MIDDLE: 1, RIGHT: 2 };
-    
+
     /**
      * @author qiao / https://github.com/qiao
      * @author mrdoob / http://mrdoob.com
@@ -331,12 +333,9 @@ module.exports = function(THREE) {
         this.addDomElement = function( domElement ) {
             this.domElements.push( domElement );
             domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
-            domElement.addEventListener( 'mousedown', function(event){onMouseDown(event, element)}, false );
+            domElement.addEventListener( 'pointerdown', function(event){onMouseDown(event, element)}, false );
             domElement.addEventListener( 'mousewheel', function(event){onMouseWheel(event, element)}, false );
             domElement.addEventListener( 'DOMMouseScroll', function(event){onMouseWheel(event, element)}, false ); // firefox
-            domElement.addEventListener( 'touchstart', function(event){touchstart(event, element)}, false );
-            domElement.addEventListener( 'touchend', function(event){touchend(event, element)}, false );
-            domElement.addEventListener( 'touchmove', function(event){touchmove(event, element)}, false );
         }
 
         };
@@ -411,10 +410,10 @@ module.exports = function(THREE) {
 
             if ( state !== STATE.NONE ) {
                 this.mouseMoveListener = function(event){onMouseMove(event, element)};
-                document.addEventListener( 'mousemove', this.mouseMoveListener, false );
+                document.addEventListener( 'pointermove', this.mouseMoveListener, false );
 
                 this.mouseUpListener = function(event){onMouseUp(event, element)};
-                document.addEventListener( 'mouseup', this.mouseUpListener, false );
+                document.addEventListener( 'pointerup', this.mouseUpListener, false );
                 scope.dispatchEvent( startEvent );
             }
 
@@ -483,8 +482,8 @@ module.exports = function(THREE) {
 
             if ( scope.enabled === false ) return;
 
-            document.removeEventListener( 'mousemove', this.mouseMoveListener, false );
-            document.removeEventListener( 'mouseup', this.mouseUpListener, false );
+            document.removeEventListener( 'pointermove', this.mouseMoveListener, false );
+            document.removeEventListener( 'pointerup', this.mouseUpListener, false );
             scope.dispatchEvent( endEvent );
             state = STATE.NONE;
 
@@ -693,12 +692,9 @@ module.exports = function(THREE) {
         for ( var i = 0; i < length; i++ ) {
             var element = this.domElements[i];
             element.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
-            element.addEventListener( 'mousedown', function(event){onMouseDown(event, element)}, false );
+            element.addEventListener( 'pointerdown', function(event){onMouseDown(event, element)}, false );
             element.addEventListener( 'mousewheel', function(event){onMouseWheel(event, element)}, false );
             element.addEventListener( 'DOMMouseScroll', function(event){onMouseWheel(event, element)}, false ); // firefox
-            element.addEventListener( 'touchstart', function(event){touchstart(event, element)}, false );
-            element.addEventListener( 'touchend', function(event){touchend(event, element)}, false );
-            element.addEventListener( 'touchmove', function(event){touchmove(event, element)}, false );
         }
 
         var element = this.domElements[0];
