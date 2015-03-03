@@ -22,7 +22,9 @@
       "name": "Yannis Kommana"
     }
   ],
-  "dependencies": {},
+  "dependencies": {
+    "PEP": "Lowfab/PEP#master"
+  },
   "devDependencies": {
     "browserify": "^8.1.1",
     "canvas-testbed": "^1.0.3",
